@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Relatório de Testes</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topo">
+    <div class="container topo-inner">
+      <div>
+        <p class="eyebrow" id="projeto"></p>
+        <h1 id="titulo">Relatório de Testes</h1>
+      </div>
+      <div class="acoes">
+        <button type="button" class="btn" id="btnEntrar" hidden>Entrar</button>
+        <div class="usuario-logado" id="usuarioLogado" hidden>
+          <span id="txtUsuario"></span>
+          <button type="button" class="btn" id="btnSair">Sair</button>
+        </div>
+        <label class="switch" title="Alternar tema escuro">
+          <input type="checkbox" id="chkTema" role="switch" aria-label="Tema escuro" />
+          <span class="switch-trilho"><span class="switch-bola"></span></span>
+        </label>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Informações gerais -->
+    <section class="card">
+      <h2>Informações gerais</h2>
+      <dl class="info" id="info"></dl>
+      <p class="objetivo" id="objetivo"></p>
+    </section>
+
+    <!-- Resumo -->
+    <section class="card">
+      <h2>Resumo da execução</h2>
+      <div class="resumo">
+        <div class="grafico">
+          <div class="donut" id="donut"><span id="taxa">0%</span><small>aprovação</small></div>
+        </div>
+        <div class="kpis" id="kpis"></div>
+      </div>
+
+      <h3 class="sub">Por área</h3>
+      <div class="tabela-wrap">
+        <table class="tabela-areas">
+          <thead>
+            <tr>
+              <th>Área</th>
+              <th>Total</th>
+              <th>Aprovado</th>
+              <th>Reprovado</th>
+              <th>Pendente</th>
+              <th class="col-barra">Progresso</th>
+            </tr>
+          </thead>
+          <tbody id="areas"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Casos de teste -->
+    <section class="card">
+      <div class="secao-head">
+        <h2>Casos de teste</h2>
+        <div class="secao-acoes">
+          <button type="button" class="btn-sec so-editor" id="btnImportar" hidden>Importar casos do data.js</button>
+          <button type="button" class="btn-primario so-editor" id="btnNovo">+ Novo caso de teste</button>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filtros">
+        <input type="search" id="busca" placeholder="Buscar…" aria-label="Buscar casos de teste" />
+        <div class="filtros-grupo" id="filtrosGrupo"></div>
+      </div>
+      <div class="filtros-ativos">
+        <div class="chips" id="chips"></div>
+        <span class="contagem" id="contagem"></span>
+      </div>
+      <div class="tabela-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Funcionalidade</th>
+              <th>Área</th>
+              <th>Módulo</th>
+              <th>Status</th>
+              <th>Data</th>
+              <th>Realizador</th>
+              <th class="col-acoes"><span class="sr-only">Ações</span></th>
+            </tr>
+          </thead>
+          <tbody id="tabela"></tbody>
+        </table>
+      </div>
+      <p class="vazio" id="vazio" hidden>Nenhum teste encontrado.</p>
+      <nav class="paginacao" id="paginacao" aria-label="Paginação dos casos de teste" hidden></nav>
+    </section>
+  </main>
+
+  <!-- Modal: novo / editar caso de teste -->
+  <dialog id="modal" class="modal">
+    <form id="formTeste" novalidate>
+      <div class="modal-head">
+        <h2 id="modalTitulo">Novo caso de teste</h2>
+        <button type="button" class="modal-fechar" id="btnFechar" aria-label="Fechar">✕</button>
+      </div>
+
+      <div class="campos">
+        <label class="campo campo-full">
+          <span>Funcionalidade *</span>
+          <input name="titulo" required autocomplete="off" />
+        </label>
+        <label class="campo">
+          <span>Área *</span>
+          <input name="area" list="lstAreas" required autocomplete="off" />
+        </label>
+        <label class="campo">
+          <span>Módulo *</span>
+          <input name="modulo" list="lstModulos" required autocomplete="off" />
+        </label>
+
+        <fieldset class="campo campo-full">
+          <span>Status *</span>
+          <div class="segmentado">
+            <label><input type="radio" name="status" value="aprovado" required /><span>Aprovado</span></label>
+            <label><input type="radio" name="status" value="reprovado" /><span>Reprovado</span></label>
+            <label><input type="radio" name="status" value="pendente" /><span>Pendente</span></label>
+          </div>
+        </fieldset>
+
+        <label class="campo">
+          <span>Data</span>
+          <input type="date" name="data" />
+        </label>
+        <label class="campo">
+          <span>Realizador</span>
+          <input name="realizador" list="lstRealizadores" autocomplete="off" />
+          <small class="dica" id="dicaRealizador" hidden>Pendentes ficam sem realizador.</small>
+        </label>
+        <label class="campo campo-full">
+          <span>Observação</span>
+          <textarea name="observacoes" rows="3" placeholder="Deixe em branco para “Sem observações.”"></textarea>
+        </label>
+      </div>
+      <p class="erro-form" id="erroForm" hidden></p>
+
+      <div class="modal-acoes">
+        <button type="button" class="btn-perigo" id="btnExcluir" hidden>Excluir</button>
+        <button type="button" class="btn-sec" id="btnCancelar">Cancelar</button>
+        <button type="submit" class="btn-sec" value="continuar" id="btnContinuar">Adicionar e continuar</button>
+        <button type="submit" class="btn-primario" value="fechar" id="btnConfirmar">Adicionar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Modal: login (modo banco) -->
+  <dialog id="modalLogin" class="modal modal-pequeno">
+    <form id="formLogin">
+      <div class="modal-head">
+        <h2>Entrar para editar</h2>
+        <button type="button" class="modal-fechar" id="btnFecharLogin" aria-label="Fechar">✕</button>
+      </div>
+      <div class="campos campos-1">
+        <label class="campo">
+          <span>E-mail</span>
+          <input type="email" name="email" required autocomplete="username" />
+        </label>
+        <label class="campo">
+          <span>Senha</span>
+          <input type="password" name="senha" required autocomplete="current-password" />
+        </label>
+      </div>
+      <p class="erro-form" id="erroLogin" hidden></p>
+      <div class="modal-acoes">
+        <button type="submit" class="btn-primario">Entrar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <datalist id="lstAreas"></datalist>
+  <datalist id="lstModulos"></datalist>
+  <datalist id="lstRealizadores"></datalist>
+
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <footer class="container rodape">
+    EcoUrbis &copy; 2026
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+  <script src="config.js"></script>
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
