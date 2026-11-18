@@ -1,0 +1,4 @@
+# Arquivos que ficam no GitHub, mas NÃO são publicados no site
+README.md
+supabase/
+.gitignore
