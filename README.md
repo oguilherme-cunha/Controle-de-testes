@@ -34,8 +34,8 @@ Os casos de teste ficam num banco **Supabase** (plano gratuito), e o site é pub
 
 ## 3. Ligar o site ao banco
 
-1. No Supabase, abra **Project Settings → API** (ou **Data API**).
-2. Copie o **Project URL** e a chave **anon public**.
+1. No Supabase, abra **Project Settings → API Keys**. A URL fica em **Data API**.
+2. Copie o **Project URL** e a **Publishable key** (`sb_publishable_...`). Em projetos antigos, ela aparece como **anon public**.
 3. Cole os dois no `config.js`:
 
    ```js

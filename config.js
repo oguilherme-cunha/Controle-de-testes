@@ -1,13 +1,15 @@
 // ============================================================
 //  CONFIGURAÇÃO DO BANCO (Supabase)
-//  Supabase > Project Settings > API:
+//  Supabase > Project Settings > API Keys:
 //    url     = "Project URL"
-//    anonKey = chave "anon" / "public"  (pode ficar pública; quem
-//              protege os dados são as regras do setup.sql)
+//    anonKey = "Publishable key" (sb_publishable_...) ou a antiga
+//              chave "anon public". Pode ficar pública: quem protege
+//              os dados são as regras do setup.sql.
+//              NUNCA use a "Secret key" / "service_role" aqui.
 //
 //  Deixe os dois vazios para usar o modo local (casos no data.js).
 // ============================================================
 window.SUPABASE_CONFIG = {
-  url: "",
-  anonKey: "",
+  url: "https://dlczgoullqwcdrqgymro.supabase.co",
+  anonKey: "sb_publishable_95whMk7dFwlVhduHnvdBow_wMB0k0GM",
 };
