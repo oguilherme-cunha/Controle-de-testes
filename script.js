@@ -1,6 +1,6 @@
 (function () {
-  const R = RELATORIO;
   const $ = (id) => document.getElementById(id);
+  let testes = []; // casos de teste carregados do Supabase
 
   // ============================================================
   //  Utilitários
@@ -10,7 +10,6 @@
     reprovado: { label: "Reprovado", cor: "var(--reprovado)" },
     pendente:  { label: "Pendente",  cor: "var(--pendente)" },
   };
-  const CAMPOS = ["titulo", "area", "modulo", "status", "data", "realizador", "observacoes"];
 
   const esc = (s) =>
     String(s ?? "").replace(/[&<>"']/g, (c) =>
@@ -23,8 +22,6 @@
   const areaDe = (t) => txt(t.area) || "Sem área";
   const moduloDe = (t) => txt(t.modulo) || "Sem módulo";
   const realizadorDe = (t) => txt(t.realizador) || "Sem realizador";
-  // Bloco modelo vazio no data.js (sem funcionalidade) não entra no relatório
-  const ehVazio = (t) => !txt(t.titulo);
 
   // Considera vazio também textos como "Sem observações" / "sem observacao."
   const temObs = (t) => {
@@ -62,28 +59,19 @@
     toastTimer = setTimeout(() => (el.hidden = true), 5000);
   }
 
-  gravarLS("relatorio-rascunhos", null); // limpa rascunhos da versão anterior
-
-  // _i = posição do teste em R.testes (usada pelo botão de editar)
-  const todos = () => R.testes.map((t, i) => ({ ...t, _i: i })).filter((t) => !ehVazio(t));
+  // _i = posição do teste em `testes` (usada pelo botão de editar)
+  const todos = () => testes.map((t, i) => ({ ...t, _i: i }));
 
   // ============================================================
-  //  Cabeçalho e informações gerais
+  //  Informações gerais: o período vem das datas dos casos
   // ============================================================
-  function renderInfo() {
-    document.title = `${R.titulo} — ${R.projeto}`;
-    $("titulo").textContent = R.titulo;
-    $("projeto").textContent = R.projeto;
-    $("objetivo").textContent = R.objetivo ? `Objetivo: ${R.objetivo}` : "";
-    $("info").innerHTML = [
-      ["Versão", R.versao],
-      ["Ambiente", R.ambiente],
-      ["Responsável", R.responsavel],
-      ["Período", R.periodo],
-    ]
-      .filter(([, v]) => v)
-      .map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`)
-      .join("");
+  function renderPeriodo() {
+    const datas = testes.map((t) => paraISO(t.data)).filter(Boolean).sort();
+    $("periodo").textContent = !datas.length
+      ? "—"
+      : datas[0] === datas.at(-1)
+        ? paraBR(datas[0])
+        : `${paraBR(datas[0])} a ${paraBR(datas.at(-1))}`;
   }
 
   // ============================================================
@@ -427,146 +415,9 @@
   });
 
   // ============================================================
-  //  Armazenamento — dois modos:
-  //   • BANCO (Supabase): quando config.js tem url e anonKey
-  //   • LOCAL (data.js):  grava direto no arquivo (Chrome/Edge)
+  //  Banco de dados (Supabase) — endereço e chave no config.js
   // ============================================================
   const CFG = window.SUPABASE_CONFIG || {};
-  const MODO_BANCO = !!(txt(CFG.url) && txt(CFG.anonKey));
-  const TESTES_DO_ARQUIVO = R.testes.filter((t) => !ehVazio(t)); // usados na importação
-  const mesmoTeste = (a, b) => CAMPOS.every((c) => txt(a[c]) === txt(b[c]));
-
-  // ---------- Modo LOCAL (data.js) ----------
-  const CABECALHO = `// ============================================================
-//  DADOS DO RELATÓRIO — edite apenas este arquivo
-//  status aceitos: "aprovado" | "reprovado" | "pendente"
-//  area: texto livre (ex.: "Fiscal", "Financeiro") — usado no resumo por área
-//  realizador: nome de quem executou o teste
-// ============================================================
-
-`;
-
-  function gerarDataJS(rel) {
-    const val = (v) => JSON.stringify(typeof v === "string" || v == null ? String(v ?? "") : v);
-    const topo = Object.keys(rel)
-      .filter((k) => k !== "testes")
-      .map((k) => `  ${k}: ${val(rel[k])},`)
-      .join("\n");
-    const bloco = (t) => {
-      const chaves = [...CAMPOS, ...Object.keys(t).filter((k) => !CAMPOS.includes(k))];
-      return `    {\n${chaves.map((k) => `      ${k}: ${val(t[k])},`).join("\n")}\n    },`;
-    };
-    const modelo = Object.fromEntries(CAMPOS.map((c) => [c, ""]));
-    const testes = rel.testes.filter((t) => !ehVazio(t));
-    return `${CABECALHO}const RELATORIO = {\n${topo}\n\n  testes: [\n${[...testes, modelo].map(bloco).join("\n")}\n  ],\n};\n`;
-  }
-
-  function lerDataJS(texto) {
-    let rel;
-    try {
-      rel = new Function(`${texto.replace(/\bconst\s+RELATORIO\b/, "var RELATORIO")}\n;return RELATORIO;`)();
-    } catch {
-      rel = null;
-    }
-    if (!rel || !Array.isArray(rel.testes)) throw new Error("o arquivo escolhido não é o data.js do relatório.");
-    return rel;
-  }
-
-  function baixar(conteudo) {
-    const url = URL.createObjectURL(new Blob([conteudo], { type: "text/javascript;charset=utf-8" }));
-    const a = Object.assign(document.createElement("a"), { href: url, download: "data.js" });
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
-
-  // Guarda o acesso ao data.js no navegador (IndexedDB), para não perguntar toda vez
-  const idb = (modo, fn) =>
-    new Promise((ok, falha) => {
-      setTimeout(() => falha(new Error("IndexedDB indisponível")), 1500); // nunca trava a gravação
-      const req = indexedDB.open("relatorio-testes", 1);
-      req.onupgradeneeded = () => req.result.createObjectStore("kv");
-      req.onerror = () => falha(req.error);
-      req.onsuccess = () => {
-        try {
-          const tx = req.result.transaction("kv", modo);
-          const r = fn(tx.objectStore("kv"));
-          tx.oncomplete = () => ok(r.result);
-          tx.onerror = () => falha(tx.error);
-        } catch (err) {
-          falha(err);
-        }
-      };
-    });
-  const lembrarArquivo = (h) => idb("readwrite", (s) => s.put(h, "dataJs")).catch(() => {});
-  const arquivoLembrado = () => idb("readonly", (s) => s.get("dataJs")).catch(() => null);
-
-  const podeGravarDireto = "showOpenFilePicker" in window;
-  let arquivo = null;
-
-  async function obterArquivo() {
-    let h = arquivo || (await arquivoLembrado());
-    if (h) {
-      let p = await h.queryPermission({ mode: "readwrite" });
-      if (p !== "granted") p = await h.requestPermission({ mode: "readwrite" });
-      if (p !== "granted") h = null;
-    }
-    if (!h) {
-      toast("Selecione o arquivo data.js da pasta do projeto (só na primeira vez).");
-      [h] = await window.showOpenFilePicker({
-        multiple: false,
-        types: [{ description: "data.js do relatório", accept: { "text/javascript": [".js"] } }],
-      });
-      const p = await h.requestPermission({ mode: "readwrite" });
-      if (p !== "granted") throw new Error("sem permissão para gravar no data.js.");
-    }
-    arquivo = h;
-    lembrarArquivo(h);
-    return h;
-  }
-
-  // Aplica `alterar(lista)` sobre o data.js atual do disco e grava
-  async function gravarNoDataJS(alterar) {
-    if (!podeGravarDireto) {
-      R.testes = alterar(R.testes.filter((t) => !ehVazio(t)));
-      baixar(gerarDataJS(R));
-      return "baixado";
-    }
-    const h = await obterArquivo();
-    const atual = lerDataJS(await (await h.getFile()).text());
-    atual.testes = alterar(atual.testes.filter((t) => !ehVazio(t)));
-    const w = await h.createWritable();
-    await w.write(gerarDataJS(atual));
-    await w.close();
-    Object.keys(R).forEach((k) => delete R[k]);
-    Object.assign(R, atual);
-    return "gravado";
-  }
-
-  function posicaoDe(lista, original) {
-    const i = lista.findIndex((t) => mesmoTeste(t, original));
-    if (i < 0) throw new Error("esse caso foi alterado ou removido no data.js. Recarregue a página e tente de novo.");
-    return i;
-  }
-
-  const armazenamentoLocal = {
-    adicionar: (dados) => gravarNoDataJS((lista) => [...lista, dados]),
-    atualizar: (original, dados) =>
-      gravarNoDataJS((lista) => {
-        const i = posicaoDe(lista, original);
-        const nova = [...lista];
-        nova[i] = { ...lista[i], ...dados };
-        return nova;
-      }),
-    excluir: (original) =>
-      gravarNoDataJS((lista) => {
-        const i = posicaoDe(lista, original);
-        return lista.filter((_, j) => j !== i);
-      }),
-  };
-
-  // ---------- Modo BANCO (Supabase) ----------
   let sb = null;          // cliente Supabase
   let usuario = null;     // usuário logado
   let ehEditor = false;   // e-mail está na tabela "editores"?
@@ -605,7 +456,7 @@
   async function carregarDoBanco() {
     const { data, error } = await sb.from(TABELA).select("*").order("id", { ascending: true });
     erroBanco(error);
-    R.testes = (data || []).map(doBanco);
+    testes = (data || []).map(doBanco);
   }
 
   async function exigirEditor() {
@@ -616,7 +467,8 @@
     if (!ehEditor) throw new Error("seu usuário não tem permissão para editar (peça para incluir seu e-mail na tabela de editores).");
   }
 
-  const armazenamentoBanco = {
+  // Cada operação devolve "gravado" e recarrega a lista do banco
+  const armazenamento = {
     async adicionar(dados) {
       await exigirEditor();
       const { error } = await sb.from(TABELA).insert(paraBanco(dados));
@@ -641,9 +493,7 @@
     },
   };
 
-  const armazenamento = MODO_BANCO ? armazenamentoBanco : armazenamentoLocal;
-
-  // ---------- Login (modo banco) ----------
+  // ---------- Login ----------
   const dlgLogin = $("modalLogin");
   const formLogin = $("formLogin");
 
@@ -666,15 +516,12 @@
 
   // Mostra/esconde botões de edição conforme o login
   function renderAcesso() {
-    const podeEditar = !MODO_BANCO || (usuario && ehEditor);
-    document.body.classList.toggle("somente-leitura", !podeEditar);
-    $("btnEntrar").hidden = !MODO_BANCO || !!usuario;
-    $("usuarioLogado").hidden = !MODO_BANCO || !usuario;
+    document.body.classList.toggle("somente-leitura", !(usuario && ehEditor));
+    $("btnEntrar").hidden = !sb || !!usuario;
+    $("usuarioLogado").hidden = !usuario;
     if (usuario) {
       $("txtUsuario").textContent = usuario.email + (ehEditor ? "" : " (sem permissão de edição)");
     }
-    $("btnImportar").hidden = !(MODO_BANCO && podeEditar && R.testes.length === 0 && TESTES_DO_ARQUIVO.length > 0);
-    $("btnImportar").textContent = `Importar ${TESTES_DO_ARQUIVO.length} casos do data.js`;
   }
 
   formLogin.addEventListener("submit", async (e) => {
@@ -701,32 +548,6 @@
   });
   $("btnFecharLogin").addEventListener("click", () => dlgLogin.close());
   dlgLogin.addEventListener("click", (e) => { if (e.target === dlgLogin) dlgLogin.close(); });
-
-  // Importa os casos do data.js para o banco vazio (uma vez só)
-  $("btnImportar").addEventListener("click", async () => {
-    const n = TESTES_DO_ARQUIVO.length;
-    if (!confirm(`Importar ${n} casos de teste do data.js para o banco?`)) return;
-    const btn = $("btnImportar");
-    btn.disabled = true;
-    try {
-      await exigirEditor();
-      const { count, error: errCont } = await sb.from(TABELA).select("id", { count: "exact", head: true });
-      erroBanco(errCont);
-      if (count > 0) throw new Error("o banco já tem casos cadastrados; a importação foi cancelada para não duplicar.");
-      const linhas = TESTES_DO_ARQUIVO.map(paraBanco);
-      for (let i = 0; i < linhas.length; i += 100) {
-        const { error } = await sb.from(TABELA).insert(linhas.slice(i, i + 100));
-        erroBanco(error);
-      }
-      await carregarDoBanco();
-      renderTudo();
-      toast(`${n} casos importados para o banco.`);
-    } catch (err) {
-      toast(`Não foi possível importar: ${err.message}`);
-    } finally {
-      btn.disabled = false;
-    }
-  });
 
   // ============================================================
   //  Modal: novo / editar caso de teste
@@ -757,7 +578,7 @@
   }
 
   function abrirModal(teste = null) {
-    if (MODO_BANCO && !usuario) return abrirLogin();
+    if (!usuario) return abrirLogin();
     form.reset();
     mostrarErro("");
     editando = teste ? { ...teste } : null;
@@ -796,20 +617,13 @@
     try {
       return await operacao();
     } catch (err) {
-      mostrarErro(
-        err.name === "AbortError"
-          ? "Gravação cancelada. Para salvar, selecione o data.js do projeto."
-          : `Não foi possível gravar: ${err.message}`
-      );
+      mostrarErro(`Não foi possível gravar: ${err.message}`);
       return null;
     } finally {
       gravando = false;
       form.classList.remove("gravando");
     }
   }
-
-  const avisoBaixado = " Este navegador não grava direto: substitua o data.js baixado na pasta do projeto.";
-  const destino = MODO_BANCO ? "no banco" : "no data.js";
 
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -840,8 +654,7 @@
     if (!resultado) return;
 
     renderTudo();
-    const acao = original ? "atualizado" : resultado === "gravado" ? `gravado ${destino}` : "adicionado";
-    toast(`“${dados.titulo}” ${acao}.${resultado === "baixado" ? avisoBaixado : ""}`);
+    toast(`“${dados.titulo}” ${original ? "atualizado" : "adicionado"}.`);
 
     if (continuar) {
       // mantém área, módulo, status, data e realizador para agilizar o próximo
@@ -862,7 +675,7 @@
     if (!resultado) return;
     renderTudo();
     dlg.close();
-    toast(`“${txt(original.titulo)}” excluído.${resultado === "baixado" ? avisoBaixado : ""}`);
+    toast(`“${txt(original.titulo)}” excluído.`);
   });
 
   // Botão ✎ de cada linha da tabela
@@ -870,7 +683,7 @@
     const b = e.target.closest("[data-editar]");
     if (!b) return;
     e.stopPropagation();
-    abrirModal(R.testes[Number(b.dataset.editar)]);
+    abrirModal(testes[Number(b.dataset.editar)]);
   }, true);
 
   $("btnNovo").addEventListener("click", () => abrirModal());
@@ -883,22 +696,17 @@
   //  Render geral e inicialização
   // ============================================================
   function renderTudo() {
-    renderInfo();
+    renderPeriodo();
     renderResumo(todos());
     renderFiltros();
     renderAcesso();
   }
 
   async function iniciar() {
-    if (!MODO_BANCO) {
-      renderTudo();
-      return;
-    }
-    // Modo banco: começa vazio e carrega do Supabase
-    R.testes = [];
     renderTudo();
     $("contagem").textContent = "Carregando…";
     try {
+      if (!txt(CFG.url) || !txt(CFG.anonKey)) throw new Error("preencha a url e a chave do Supabase no config.js.");
       if (!window.supabase) throw new Error("biblioteca do Supabase não carregou (verifique a internet).");
       sb = window.supabase.createClient(CFG.url, CFG.anonKey);
       const { data } = await sb.auth.getSession();

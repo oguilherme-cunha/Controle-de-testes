@@ -6,8 +6,6 @@
 //              chave "anon public". Pode ficar pública: quem protege
 //              os dados são as regras do setup.sql.
 //              NUNCA use a "Secret key" / "service_role" aqui.
-//
-//  Deixe os dois vazios para usar o modo local (casos no data.js).
 // ============================================================
 window.SUPABASE_CONFIG = {
   url: "https://dlczgoullqwcdrqgymro.supabase.co",

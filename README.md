@@ -5,12 +5,12 @@ Os casos de teste ficam num banco **Supabase** (plano gratuito), e o site é pub
 
 | Arquivo | Para que serve |
 |---|---|
-| `index.html`, `style.css`, `script.js` | O site |
+| `index.html`, `style.css`, `script.js` | O site. O cabeçalho (projeto, ambiente, responsável, objetivo) fica no `index.html` |
 | `config.js` | Endereço e chave pública do Supabase |
-| `data.js` | Cabeçalho do relatório (projeto, ambiente, responsável, período, objetivo) e os casos antigos, usados na importação |
 | `supabase/setup.sql` | Cria a tabela, as regras de acesso e a lista de editores no banco |
+| `supabase/trocar_realizadores.sql` | Troca o usuário do Protheus pelo nome completo nos casos de teste |
 
-> Com `config.js` vazio, o site funciona no **modo local**: lê e grava os casos no `data.js` (Chrome/Edge).
+> O **Período** em "Informações gerais" é calculado sozinho: vai da data mais antiga à mais recente dos casos de teste.
 
 ---
 
@@ -48,14 +48,10 @@ Os casos de teste ficam num banco **Supabase** (plano gratuito), e o site é pub
    A chave `anon` foi feita para ficar pública. Quem protege os dados são as regras criadas pelo `setup.sql`.
    **Nunca** coloque aqui a chave `service_role`.
 
-## 4. Levar os casos atuais para o banco (uma vez só)
+## 4. Cadastrar os casos de teste
 
-1. Abra o `index.html` no navegador (precisa de internet).
-2. Clique em **Entrar** e faça login.
-3. Clique em **Importar N casos do data.js**.
-   - O botão só aparece quando o banco está vazio, então não há risco de duplicar.
-
-A partir daí, inclua, edite e exclua os casos pelo próprio site. Tudo é gravado no banco.
+Abra o site, clique em **Entrar**, faça login e use **+ Novo caso de teste**.
+Inclua, edite e exclua os casos pelo próprio site. Tudo é gravado no banco na hora.
 
 ## 5. Publicar no GitHub e no Vercel
 
@@ -73,7 +69,7 @@ A partir daí, inclua, edite e exclua os casos pelo próprio site. Tudo é grava
 2. No Vercel, clique em **Add New → Project**, importe o repositório e mantenha **Framework Preset: Other**, sem comando de build.
 3. Clique em **Deploy**.
 
-Depois disso, o banco é atualizado na hora pelo site. Só é preciso fazer `git push` quando o **código** ou o **cabeçalho** no `data.js` mudarem.
+Depois disso, o banco é atualizado na hora pelo site. Só é preciso fazer `git push` quando o **código** ou o **cabeçalho** no `index.html` mudarem. O Vercel publica sozinho a cada push.
 
 ---
 

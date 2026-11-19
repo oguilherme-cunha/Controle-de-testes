@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Relatório de Testes</title>
+  <title>Relatório de Testes — Reforma Tributária / Protheus</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="topo">
     <div class="container topo-inner">
       <div>
-        <p class="eyebrow" id="projeto"></p>
-        <h1 id="titulo">Relatório de Testes</h1>
+        <p class="eyebrow">Reforma Tributária / Protheus</p>
+        <h1>Relatório de Testes</h1>
       </div>
       <div class="acoes">
         <button type="button" class="btn" id="btnEntrar" hidden>Entrar</button>
@@ -31,8 +31,14 @@
     <!-- Informações gerais -->
     <section class="card">
       <h2>Informações gerais</h2>
-      <dl class="info" id="info"></dl>
-      <p class="objetivo" id="objetivo"></p>
+      <dl class="info">
+        <div><dt>Ambiente</dt><dd>Homologação</dd></div>
+        <div><dt>Responsável</dt><dd>Guilherme Cunha Alves</dd></div>
+        <div><dt>Período</dt><dd id="periodo">—</dd></div>
+      </dl>
+      <p class="objetivo">
+        Objetivo: Validar as funcionalidades principais dos módulos do Protheus antes de aplicar a atualização em produção.
+      </p>
     </section>
 
     <!-- Resumo -->
@@ -68,7 +74,6 @@
       <div class="secao-head">
         <h2>Casos de teste</h2>
         <div class="secao-acoes">
-          <button type="button" class="btn-sec so-editor" id="btnImportar" hidden>Importar casos do data.js</button>
           <button type="button" class="btn-primario so-editor" id="btnNovo">+ Novo caso de teste</button>
         </div>
       </div>
@@ -195,7 +200,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.58.0/dist/umd/supabase.js"></script>
   <script src="config.js"></script>
-  <script src="data.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
