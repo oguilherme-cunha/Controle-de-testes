@@ -7,8 +7,8 @@ Os casos de teste ficam num banco **Supabase** (plano gratuito), e o site é pub
 |---|---|
 | `index.html`, `style.css`, `script.js` | O site. O cabeçalho (projeto, ambiente, responsável, objetivo) fica no `index.html` |
 | `config.js` | Endereço e chave pública do Supabase |
-| `supabase/setup.sql` | Cria a tabela, as regras de acesso e a lista de editores no banco |
-| `supabase/trocar_realizadores.sql` | Troca o usuário do Protheus pelo nome completo nos casos de teste |
+| `supabase/setup.sql` | Cria a lista de editores e as regras de acesso no banco (rode primeiro) |
+| `supabase/testers.sql` | Cria as tabelas usadas pelo site: `testers`, `casos` e `execucoes` (rode depois do setup.sql) |
 
 > O **Período** em "Informações gerais" é calculado sozinho: vai da data mais antiga à mais recente dos casos de teste.
 
@@ -23,6 +23,12 @@ Os casos de teste ficam num banco **Supabase** (plano gratuito), e o site é pub
 3. Cole todo o conteúdo de `supabase/setup.sql`.
 4. **Na última parte do arquivo, troque `seu-email@exemplo.com` pelo seu e-mail.** Para cadastrar mais editores, repita a linha `insert` com outros e-mails.
 5. Clique em **Run**.
+6. Faça o mesmo com `supabase/testers.sql`.
+
+**Como os dados se organizam:**
+- **testers:** as pessoas (nome, usuário do Protheus, área).
+- **casos:** as funcionalidades, uma por módulo, sem repetição.
+- **execucoes:** o resultado de cada pessoa em cada caso. Atribuir um caso a alguém cria um resultado "Pendente".
 
 ## 2. Criar o usuário de quem vai editar
 

@@ -6,7 +6,7 @@
   <title>Relatório de Testes — Reforma Tributária / Protheus</title>
   <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="somente-leitura">
   <header class="topo">
     <div class="container topo-inner">
       <div>
@@ -50,14 +50,16 @@
         </div>
         <div class="kpis" id="kpis"></div>
       </div>
+      <p class="resumo-testers" id="resumoTesters"></p>
 
       <h3 class="sub">Por área</h3>
+      <p class="dica-sub">Testes feitos pelas pessoas de cada área. Casos sem tester aparecem em “Sem área”.</p>
       <div class="tabela-wrap">
         <table class="tabela-areas">
           <thead>
             <tr>
               <th>Área</th>
-              <th>Total</th>
+              <th>Testes</th>
               <th>Aprovado</th>
               <th>Reprovado</th>
               <th>Pendente</th>
@@ -69,51 +71,85 @@
       </div>
     </section>
 
-    <!-- Casos de teste -->
+    <!-- Abas: Casos de teste | Testers -->
     <section class="card">
-      <div class="secao-head">
-        <h2>Casos de teste</h2>
-        <div class="secao-acoes">
-          <button type="button" class="btn-primario so-editor" id="btnNovo">+ Novo caso de teste</button>
-        </div>
+      <div class="abas" role="tablist" aria-label="Seções do relatório">
+        <button type="button" class="aba" role="tab" id="abaCasos" data-aba="casos" aria-controls="painelCasos" aria-selected="true">
+          Casos de teste <span class="aba-num" id="numCasos"></span>
+        </button>
+        <button type="button" class="aba" role="tab" id="abaTesters" data-aba="testers" aria-controls="painelTesters" aria-selected="false" tabindex="-1">
+          Testers <span class="aba-num" id="numTesters"></span>
+        </button>
       </div>
 
-      <!-- Filtros -->
-      <div class="filtros">
-        <input type="search" id="busca" placeholder="Buscar…" aria-label="Buscar casos de teste" />
-        <div class="filtros-grupo" id="filtrosGrupo"></div>
+      <!-- Painel: Casos de teste -->
+      <div class="painel" id="painelCasos" role="tabpanel" aria-labelledby="abaCasos">
+        <div class="filtros">
+          <input type="search" class="busca" id="buscaCasos" placeholder="Buscar…" aria-label="Buscar casos de teste" />
+          <div class="filtros-grupo" id="filtrosCasos"></div>
+          <button type="button" class="btn-primario so-editor empurra" id="btnNovoCaso">+ Novo caso de teste</button>
+        </div>
+        <div class="filtros-ativos">
+          <div class="chips" id="chipsCasos"></div>
+          <span class="contagem" id="contagemCasos"></span>
+        </div>
+        <div class="tabela-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Funcionalidade</th>
+                <th>Módulo</th>
+                <th>Testers</th>
+                <th>Status</th>
+                <th>Última data</th>
+                <th class="col-acoes"><span class="sr-only">Ações</span></th>
+              </tr>
+            </thead>
+            <tbody id="tabelaCasos"></tbody>
+          </table>
+        </div>
+        <p class="vazio" id="vazioCasos" hidden>Nenhum caso encontrado.</p>
+        <nav class="paginacao" id="paginacao" aria-label="Paginação dos casos de teste" hidden></nav>
       </div>
-      <div class="filtros-ativos">
-        <div class="chips" id="chips"></div>
-        <span class="contagem" id="contagem"></span>
+
+      <!-- Painel: Testers -->
+      <div class="painel" id="painelTesters" role="tabpanel" aria-labelledby="abaTesters" hidden>
+        <div class="filtros">
+          <input type="search" class="busca" id="buscaTesters" placeholder="Buscar pessoa…" aria-label="Buscar testers" />
+          <div class="filtros-grupo" id="filtrosTesters"></div>
+          <button type="button" class="btn-primario so-editor empurra" id="btnNovoTester">+ Novo tester</button>
+        </div>
+        <div class="filtros-ativos">
+          <div class="chips" id="chipsTesters"></div>
+          <span class="contagem" id="contagemTesters"></span>
+        </div>
+        <div class="tabela-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Usuário</th>
+                <th>Área</th>
+                <th>Status</th>
+                <th class="col-barra">Progresso</th>
+                <th>Resultados</th>
+                <th class="col-acoes"><span class="sr-only">Ações</span></th>
+              </tr>
+            </thead>
+            <tbody id="tabelaTesters"></tbody>
+          </table>
+        </div>
+        <p class="vazio" id="vazioTesters" hidden>Nenhum tester encontrado.</p>
       </div>
-      <div class="tabela-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Funcionalidade</th>
-              <th>Área</th>
-              <th>Módulo</th>
-              <th>Status</th>
-              <th>Data</th>
-              <th>Realizador</th>
-              <th class="col-acoes"><span class="sr-only">Ações</span></th>
-            </tr>
-          </thead>
-          <tbody id="tabela"></tbody>
-        </table>
-      </div>
-      <p class="vazio" id="vazio" hidden>Nenhum teste encontrado.</p>
-      <nav class="paginacao" id="paginacao" aria-label="Paginação dos casos de teste" hidden></nav>
     </section>
   </main>
 
   <!-- Modal: novo / editar caso de teste -->
-  <dialog id="modal" class="modal">
-    <form id="formTeste" novalidate>
+  <dialog id="modalCaso" class="modal">
+    <form id="formCaso" novalidate>
       <div class="modal-head">
-        <h2 id="modalTitulo">Novo caso de teste</h2>
-        <button type="button" class="modal-fechar" id="btnFechar" aria-label="Fechar">✕</button>
+        <h2 id="tituloModalCaso">Novo caso de teste</h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">✕</button>
       </div>
 
       <div class="campos">
@@ -121,55 +157,150 @@
           <span>Funcionalidade *</span>
           <input name="titulo" required autocomplete="off" />
         </label>
-        <label class="campo">
-          <span>Área *</span>
-          <input name="area" list="lstAreas" required autocomplete="off" />
-        </label>
-        <label class="campo">
+        <label class="campo campo-full">
           <span>Módulo *</span>
           <input name="modulo" list="lstModulos" required autocomplete="off" />
         </label>
+      </div>
 
+      <!-- Só no cadastro: já registra o primeiro tester (opcional) -->
+      <fieldset class="bloco" id="blocoPrimeiroTester">
+        <legend>Tester <small>(opcional — dá para atribuir depois)</small></legend>
+        <div class="campos">
+          <label class="campo campo-full">
+            <span>Tester</span>
+            <select name="tester" id="selTesterCaso"></select>
+          </label>
+          <fieldset class="campo campo-full" id="statusCaso" disabled>
+            <span>Resultado</span>
+            <div class="segmentado">
+              <label><input type="radio" name="status" value="aprovado" /><span>Aprovado</span></label>
+              <label><input type="radio" name="status" value="reprovado" /><span>Reprovado</span></label>
+              <label><input type="radio" name="status" value="pendente" /><span>Pendente</span></label>
+            </div>
+          </fieldset>
+          <label class="campo">
+            <span>Data</span>
+            <input type="date" name="data" />
+          </label>
+          <label class="campo campo-full">
+            <span>Observação</span>
+            <textarea name="observacoes" rows="3" placeholder="Deixe em branco para “Sem observações.”"></textarea>
+          </label>
+        </div>
+      </fieldset>
+
+      <div class="erro-form" id="erroCaso" hidden>
+        <span class="erro-txt"></span>
+        <button type="button" class="btn-sec btn-mini" id="btnAbrirExistente" hidden>Abrir caso existente</button>
+      </div>
+
+      <div class="modal-acoes">
+        <button type="button" class="btn-perigo" id="btnExcluirCaso" hidden>Excluir caso</button>
+        <button type="button" class="btn-sec" data-fechar>Cancelar</button>
+        <button type="submit" class="btn-sec" value="continuar" id="btnContinuarCaso">Adicionar e continuar</button>
+        <button type="submit" class="btn-primario btn-confirmar" value="fechar" id="btnConfirmarCaso">Adicionar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Modal: resultado de um tester em um caso -->
+  <dialog id="modalExec" class="modal">
+    <form id="formExec" novalidate>
+      <div class="modal-head">
+        <h2 id="tituloModalExec">Adicionar tester</h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">✕</button>
+      </div>
+      <p class="modal-contexto" id="execCaso"></p>
+
+      <div class="campos">
+        <label class="campo campo-full">
+          <span>Tester *</span>
+          <select name="tester" id="selTesterExec" required></select>
+        </label>
         <fieldset class="campo campo-full">
-          <span>Status *</span>
+          <span>Resultado *</span>
           <div class="segmentado">
-            <label><input type="radio" name="status" value="aprovado" required /><span>Aprovado</span></label>
+            <label><input type="radio" name="status" value="aprovado" /><span>Aprovado</span></label>
             <label><input type="radio" name="status" value="reprovado" /><span>Reprovado</span></label>
             <label><input type="radio" name="status" value="pendente" /><span>Pendente</span></label>
           </div>
         </fieldset>
-
         <label class="campo">
           <span>Data</span>
           <input type="date" name="data" />
-        </label>
-        <label class="campo">
-          <span>Realizador</span>
-          <input name="realizador" list="lstRealizadores" autocomplete="off" />
-          <small class="dica" id="dicaRealizador" hidden>Pendentes ficam sem realizador.</small>
         </label>
         <label class="campo campo-full">
           <span>Observação</span>
           <textarea name="observacoes" rows="3" placeholder="Deixe em branco para “Sem observações.”"></textarea>
         </label>
       </div>
-      <p class="erro-form" id="erroForm" hidden></p>
+      <p class="erro-form" id="erroExec" hidden></p>
 
       <div class="modal-acoes">
-        <button type="button" class="btn-perigo" id="btnExcluir" hidden>Excluir</button>
-        <button type="button" class="btn-sec" id="btnCancelar">Cancelar</button>
-        <button type="submit" class="btn-sec" value="continuar" id="btnContinuar">Adicionar e continuar</button>
-        <button type="submit" class="btn-primario" value="fechar" id="btnConfirmar">Adicionar</button>
+        <button type="button" class="btn-perigo" id="btnRemoverExec" hidden>Remover do caso</button>
+        <button type="button" class="btn-sec" data-fechar>Cancelar</button>
+        <button type="submit" class="btn-primario btn-confirmar" id="btnConfirmarExec">Salvar</button>
       </div>
     </form>
   </dialog>
 
-  <!-- Modal: login (modo banco) -->
+  <!-- Modal: novo / editar tester -->
+  <dialog id="modalTester" class="modal modal-pequeno">
+    <form id="formTester" novalidate>
+      <div class="modal-head">
+        <h2 id="tituloModalTester">Novo tester</h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">✕</button>
+      </div>
+      <div class="campos campos-1">
+        <label class="campo">
+          <span>Nome completo *</span>
+          <input name="nome" required autocomplete="off" />
+        </label>
+        <label class="campo">
+          <span>Usuário do Protheus</span>
+          <input name="usuario" autocomplete="off" />
+        </label>
+        <label class="campo">
+          <span>Área *</span>
+          <input name="area" list="lstAreas" required autocomplete="off" />
+        </label>
+      </div>
+      <p class="dica" id="dicaExcluirTester" hidden>Quem já tem testes realizados não pode ser excluído.</p>
+      <p class="erro-form" id="erroTester" hidden></p>
+      <div class="modal-acoes">
+        <button type="button" class="btn-perigo" id="btnExcluirTester" hidden>Excluir</button>
+        <button type="button" class="btn-sec" data-fechar>Cancelar</button>
+        <button type="submit" class="btn-primario btn-confirmar" id="btnConfirmarTester">Adicionar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Modal: atribuir casos a um tester -->
+  <dialog id="modalAtribuir" class="modal">
+    <form id="formAtribuir" novalidate>
+      <div class="modal-head">
+        <h2 id="tituloModalAtribuir">Atribuir casos</h2>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">✕</button>
+      </div>
+      <p class="modal-contexto">Os casos marcados ficam <strong>pendentes</strong> para essa pessoa até ela testar.</p>
+      <input type="search" class="busca busca-modal" id="buscaAtribuir" placeholder="Buscar funcionalidade ou módulo…" aria-label="Buscar casos" />
+      <div class="lista-atribuir" id="listaAtribuir"></div>
+      <p class="erro-form" id="erroAtribuir" hidden></p>
+      <div class="modal-acoes">
+        <span class="contagem empurra-esq" id="contAtribuir"></span>
+        <button type="button" class="btn-sec" data-fechar>Cancelar</button>
+        <button type="submit" class="btn-primario btn-confirmar" id="btnConfirmarAtribuir">Atribuir</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- Modal: login -->
   <dialog id="modalLogin" class="modal modal-pequeno">
     <form id="formLogin">
       <div class="modal-head">
         <h2>Entrar para editar</h2>
-        <button type="button" class="modal-fechar" id="btnFecharLogin" aria-label="Fechar">✕</button>
+        <button type="button" class="modal-fechar" data-fechar aria-label="Fechar">✕</button>
       </div>
       <div class="campos campos-1">
         <label class="campo">
@@ -183,14 +314,13 @@
       </div>
       <p class="erro-form" id="erroLogin" hidden></p>
       <div class="modal-acoes">
-        <button type="submit" class="btn-primario">Entrar</button>
+        <button type="submit" class="btn-primario btn-confirmar">Entrar</button>
       </div>
     </form>
   </dialog>
 
   <datalist id="lstAreas"></datalist>
   <datalist id="lstModulos"></datalist>
-  <datalist id="lstRealizadores"></datalist>
 
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
